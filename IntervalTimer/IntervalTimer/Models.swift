@@ -1,12 +1,26 @@
 import Foundation
+import SwiftData
 
 // MARK: - Workout
 
-struct Workout: Identifiable, Codable {
-    var id: UUID = UUID()
+@Model
+final class Workout {
+    var id: UUID
     var name: String
     var intervals: [Interval]
-    var createdDate: Date = Date()
+    var createdDate: Date
+    
+    init(
+        id: UUID = UUID(),
+        name: String,
+        intervals: [Interval] = [],
+        createdDate: Date = Date()
+    ) {
+        self.id = id
+        self.name = name
+        self.intervals = intervals
+        self.createdDate = createdDate
+    }
     
     var totalDuration: TimeInterval {
         intervals.reduce(0) { $0 + $1.workDuration + $1.restDuration }
@@ -15,12 +29,27 @@ struct Workout: Identifiable, Codable {
 
 // MARK: - Interval
 
-struct Interval: Identifiable, Codable {
-    var id: UUID = UUID()
+@Model
+final class Interval {
+    var id: UUID
     var type: IntervalType
     var workDuration: TimeInterval
     var restDuration: TimeInterval
     var notes: String?
+    
+    init(
+        id: UUID = UUID(),
+        type: IntervalType,
+        workDuration: TimeInterval,
+        restDuration: TimeInterval,
+        notes: String? = nil
+    ) {
+        self.id = id
+        self.type = type
+        self.workDuration = workDuration
+        self.restDuration = restDuration
+        self.notes = notes
+    }
 }
 
 // MARK: - Interval Type
@@ -44,15 +73,17 @@ enum IntervalType: String, Codable, CaseIterable {
 // MARK: - Sample Data
 
 extension Workout {
-    static let sampleHIIT = Workout(
-        name: "Classic HIIT",
-        intervals: [
-            Interval(type: .warmup, workDuration: 120, restDuration: 0),
-            Interval(type: .work, workDuration: 20, restDuration: 10),
-            Interval(type: .work, workDuration: 20, restDuration: 10),
-            Interval(type: .work, workDuration: 20, restDuration: 10),
-            Interval(type: .work, workDuration: 20, restDuration: 10),
-            Interval(type: .cooldown, workDuration: 120, restDuration: 0)
-        ]
-    )
+    static var sampleHIIT: Workout {
+        Workout(
+            name: "Classic HIIT",
+            intervals: [
+                Interval(type: .warmup, workDuration: 120, restDuration: 0),
+                Interval(type: .work, workDuration: 20, restDuration: 10),
+                Interval(type: .work, workDuration: 20, restDuration: 10),
+                Interval(type: .work, workDuration: 20, restDuration: 10),
+                Interval(type: .work, workDuration: 20, restDuration: 10),
+                Interval(type: .cooldown, workDuration: 120, restDuration: 0)
+            ]
+        )
+    }
 }
