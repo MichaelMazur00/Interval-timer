@@ -7,65 +7,95 @@ import SwiftData
 final class Workout {
     var id: UUID
     var name: String
-    var intervals: [Interval]
     var createdDate: Date
-    
+
+    @Relationship(deleteRule: .cascade, inverse: \WorkoutBlock.workout)
+    var blocks: [WorkoutBlock] = []
+
     init(
         id: UUID = UUID(),
         name: String,
-        intervals: [Interval] = [],
+        blocks: [WorkoutBlock] = [],
         createdDate: Date = Date()
     ) {
         self.id = id
         self.name = name
-        self.intervals = intervals
         self.createdDate = createdDate
+        self.blocks = blocks
     }
-    
+
     var totalDuration: TimeInterval {
-        intervals.reduce(0) { $0 + $1.workDuration + $1.restDuration }
+        blocks.reduce(0) { $0 + $1.totalDuration }
     }
 }
 
-// MARK: - Interval
+// MARK: - WorkoutBlock
 
 @Model
-final class Interval {
+final class WorkoutBlock {
     var id: UUID
-    var type: IntervalType
-    var workDuration: TimeInterval
-    var restDuration: TimeInterval
-    var notes: String?
-    
+    var name: String
+    var repeatCount: Int
+    var workout: Workout?
+
+    @Relationship(deleteRule: .cascade, inverse: \Phase.block)
+    var phases: [Phase] = []
+
     init(
         id: UUID = UUID(),
-        type: IntervalType,
-        workDuration: TimeInterval,
-        restDuration: TimeInterval,
-        notes: String? = nil
+        name: String,
+        repeatCount: Int = 1,
+        phases: [Phase] = []
+    ) {
+        self.id = id
+        self.name = name
+        self.repeatCount = repeatCount
+        self.phases = phases
+    }
+
+    var phasesDuration: TimeInterval {
+        phases.reduce(0) { $0 + $1.duration }
+    }
+
+    var totalDuration: TimeInterval {
+        phasesDuration * Double(repeatCount)
+    }
+}
+
+// MARK: - Phase
+
+@Model
+final class Phase {
+    var id: UUID
+    var type: PhaseType
+    var duration: TimeInterval
+    var block: WorkoutBlock?
+
+    init(
+        id: UUID = UUID(),
+        type: PhaseType,
+        duration: TimeInterval
     ) {
         self.id = id
         self.type = type
-        self.workDuration = workDuration
-        self.restDuration = restDuration
-        self.notes = notes
+        self.duration = duration
     }
 }
 
-// MARK: - Interval Type
+// MARK: - Phase Type
 
-enum IntervalType: String, Codable, CaseIterable {
+enum PhaseType: String, Codable, CaseIterable {
     case warmup
     case work
     case rest
     case cooldown
-    
+
     var displayName: String {
         switch self {
-        case .warmup: return "Warm-up"
+        case .warmup: return "Warm up"
         case .work: return "Work"
         case .rest: return "Rest"
-        case .cooldown: return "Cool-down"
+        case .cooldown: return "Cool down"
         }
     }
 }
@@ -73,16 +103,26 @@ enum IntervalType: String, Codable, CaseIterable {
 // MARK: - Sample Data
 
 extension Workout {
-    static var sampleHIIT: Workout {
+    static var sampleFigmaWorkout: Workout {
         Workout(
-            name: "Classic HIIT",
-            intervals: [
-                Interval(type: .warmup, workDuration: 120, restDuration: 0),
-                Interval(type: .work, workDuration: 20, restDuration: 10),
-                Interval(type: .work, workDuration: 20, restDuration: 10),
-                Interval(type: .work, workDuration: 20, restDuration: 10),
-                Interval(type: .work, workDuration: 20, restDuration: 10),
-                Interval(type: .cooldown, workDuration: 120, restDuration: 0)
+            name: "Workout",
+            blocks: [
+                WorkoutBlock(
+                    name: "Warm up",
+                    phases: [Phase(type: .warmup, duration: 600)]
+                ),
+                WorkoutBlock(
+                    name: "Interval",
+                    repeatCount: 10,
+                    phases: [
+                        Phase(type: .work, duration: 75),
+                        Phase(type: .rest, duration: 180)
+                    ]
+                ),
+                WorkoutBlock(
+                    name: "Cool down",
+                    phases: [Phase(type: .cooldown, duration: 600)]
+                )
             ]
         )
     }

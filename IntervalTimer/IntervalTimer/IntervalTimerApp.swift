@@ -14,6 +14,6 @@ struct IntervalTimerApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [Workout.self, Interval.self])
+        .modelContainer(for: [Workout.self, WorkoutBlock.self, Phase.self])
     }
 }
